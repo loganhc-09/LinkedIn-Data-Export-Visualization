@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualize Your LinkedIn Data Export</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Sophisticated light palette with warm accents */
+            --bg-primary: #ffffff;
+            --bg-secondary: #fafafa;
+            --bg-tertiary: #f5f5f5;
+            --border-subtle: #e5e5e5;
+            --border-medium: #d0d0d0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+
+            /* Accent colors - muted, professional */
+            --accent-primary: #c9a962;  /* warm gold */
+            --accent-secondary: #7a9e9f; /* sage/teal */
+            --accent-tertiary: #9b8aa5;  /* muted purple */
+            --accent-quaternary: #a5897a; /* warm taupe */
+
+            /* Data visualization palette - sophisticated, muted */
+            --data-1: #c9a962;  /* gold */
+            --data-2: #7a9e9f;  /* sage */
+            --data-3: #9b8aa5;  /* lavender */
+            --data-4: #a5897a;  /* taupe */
+            --data-5: #8fa387;  /* moss */
+            --data-6: #b08b8b;  /* dusty rose */
+            --data-7: #7d8a99;  /* slate */
+            --data-8: #a09080;  /* stone */
+            --data-9: #8b7355;  /* bronze */
+
+            /* Status colors */
+            --positive: #7a9e7a;
+            --negative: #b08080;
+            --neutral: #808080;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        /* Intro Section */
+        .intro-section {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 40px;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 60px;
+        }
+
+        .intro-section h2 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .steps-list {
+            list-style: none;
+            counter-reset: steps;
+        }
+
+        .steps-list li {
+            counter-increment: steps;
+            padding: 12px 0;
+            padding-left: 40px;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .steps-list li::before {
+            content: counter(steps);
+            position: absolute;
+            left: 0;
+            width: 26px;
+            height: 26px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .steps-list li strong {
+            color: var(--text-primary);
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 24px 30px;
+            margin-top: 30px;
+        }
+
+        .toc h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .toc-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px 24px;
+            list-style: none;
+        }
+
+        .toc-list a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .toc-list a:hover {
+            color: var(--accent-primary);
+        }
+
+        .viz-section {
+            margin-bottom: 80px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 40px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .viz-section h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .viz-section .description {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        /* Prompt Box - replaces insight box */
+        .prompt-box {
+            background: linear-gradient(135deg, rgba(201,169,98,0.08) 0%, rgba(201,169,98,0.03) 100%);
+            border: 1px solid rgba(201,169,98,0.3);
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-top: 30px;
+        }
+
+        .prompt-box .prompt-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .prompt-box .prompt-text {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            padding: 12px 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .prompt-box .csv-note {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .chart-container.tall {
+            height: 500px;
+        }
+
+        /* Geological Strata */
+        .strata-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .strata-layer {
+            padding: 24px 32px;
+            position: relative;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .strata-layer:last-child {
+            border-bottom: none;
+        }
+
+        .strata-layer:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .strata-layer .era {
+            font-weight: 500;
+            font-size: 1rem;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .strata-layer .details {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .strata-layer .count {
+            position: absolute;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-muted);
+        }
+
+        /* Skills Comparison */
+        .skills-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .skills-column {
+            padding: 28px;
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .skills-column.bad {
+            border-left: 2px solid var(--negative);
+        }
+
+        .skills-column.good {
+            border-left: 2px solid var(--positive);
+        }
+
+        .skills-column h3 {
+            margin-bottom: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .skills-column.bad h3 {
+            color: var(--negative);
+        }
+
+        .skills-column.good h3 {
+            color: var(--positive);
+        }
+
+        .skill-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            margin: 3px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 400;
+        }
+
+        .skills-column.bad .skill-tag {
+            background: rgba(176,128,128,0.15);
+            color: var(--negative);
+        }
+
+        .skills-column.good .skill-tag {
+            background: rgba(122,158,122,0.15);
+            color: var(--positive);
+        }
+
+        /* Invitation story */
+        .invitation-flow {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .flow-month {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 16px;
+        }
+
+        .flow-month .month-label {
+            width: 80px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: right;
+            font-weight: 400;
+        }
+
+        .flow-bars {
+            flex: 1;
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .flow-bar {
+            height: 28px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            min-width: 28px;
+        }
+
+        .flow-bar.incoming {
+            background: var(--data-2);
+        }
+
+        .flow-bar.outgoing {
+            background: var(--data-7);
+        }
+
+        .legend {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .legend-dot.incoming {
+            background: var(--data-2);
+        }
+
+        .legend-dot.outgoing {
+            background: var(--data-7);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-bottom: 2px solid var(--border-medium);
+        }
+
+        .comparison-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.9rem;
+        }
+
+        .comparison-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .comparison-table td:first-child {
+            color: var(--text-muted);
+        }
+
+        .comparison-table td:last-child {
+            color: var(--text-primary);
+            font-weight: 400;
+        }
+
+        /* High Value Messages */
+        .message-card {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--positive);
+        }
+
+        .message-card .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .message-card .message-type {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--positive);
+            font-weight: 500;
+        }
+
+        .message-card .message-age {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .message-card .message-preview {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* Badge */
+        .badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .badge.warm {
+            background: rgba(122,158,159,0.15);
+            color: var(--data-2);
+        }
+
+        .badge.active {
+            background: rgba(122,158,122,0.15);
+            color: var(--positive);
+        }
+
+        .badge.collab {
+            background: rgba(201,169,98,0.15);
+            color: var(--data-1);
+        }
+
+        /* Sticky Side Navigation */
+        .side-nav {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 16px 12px;
+            z-index: 100;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .side-nav a {
+            display: block;
+            padding: 8px 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .side-nav a:hover {
+            background: var(--bg-tertiary);
+            color: var(--accent-primary);
+        }
+
+        .side-nav .nav-section {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 12px 12px 4px;
+            margin-top: 8px;
+        }
+
+        .side-nav .nav-section:first-child {
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        /* Show side nav only on very wide screens */
+        @media (max-width: 1500px) {
+            .side-nav {
+                display: none;
+            }
+        }
+
+        /* Hide elements on mobile */
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none !important;
+            }
+
+            .timeline-month-labels {
+                padding: 0 60px 0 60px !important;
+            }
+        }
+
+        /* On wide screens, shift content right to make room for side nav */
+        @media (min-width: 1501px) {
+            .container {
+                margin-left: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+
+            /* Stack the top boxes on mobile */
+            .top-boxes-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .intro-section {
+                padding: 24px 20px;
+            }
+
+            .viz-section {
+                padding: 24px 20px;
+                margin-bottom: 40px;
+            }
+
+            .viz-section h2 {
+                font-size: 1.1rem;
+            }
+
+            /* Stack 3-column grids to 1 column */
+            .viz-section [style*="grid-template-columns: repeat(3"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Stack 5-column grids to 2 columns */
+            .viz-section [style*="grid-template-columns: repeat(5"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+
+            /* TOC single column on mobile */
+            .toc-list {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Charts need to be responsive */
+            .chart-container {
+                height: 250px !important;
+            }
+
+            .chart-container.tall {
+                height: 300px !important;
+            }
+
+            /* Network graph smaller on mobile */
+            #networkGraph {
+                height: 400px !important;
+            }
+
+            /* Strata layers - stack text and count vertically on mobile */
+            .strata-layer {
+                padding: 16px !important;
+                padding-right: 16px !important;
+            }
+
+            .strata-layer .count {
+                position: static !important;
+                transform: none !important;
+                font-size: 1.2rem !important;
+                margin-top: 8px;
+                display: block;
+            }
+
+            /* Flow bars smaller */
+            .invitation-flow .flow-bar {
+                font-size: 0.7rem !important;
+                padding: 6px 8px !important;
+            }
+
+            /* Message cards */
+            .message-card {
+                padding: 16px !important;
+            }
+
+            /* Prompt boxes */
+            .prompt-box {
+                padding: 16px !important;
+            }
+
+            .prompt-text {
+                font-size: 0.85rem !important;
+            }
+
+            /* Skills comparison stack */
+            .skills-comparison {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Timeline rows smaller */
+            .connection-timeline-row {
+                gap: 8px !important;
+            }
+
+            /* Connection timeline - hide month header on mobile, show only first and last */
+            .timeline-month-header {
+                display: none !important;
+            }
+
+            /* Timeline legend - wrap and show fully */
+            .timeline-legend {
+                flex-wrap: wrap !important;
+                gap: 8px 16px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* Color palette wraps better */
+            .color-swatches {
+                gap: 6px !important;
+            }
+
+            /* Bottom CTA */
+            .bottom-cta {
+                padding: 24px 20px !important;
+            }
+
+            /* Legend items wrap */
+            .legend {
+                flex-wrap: wrap;
+                gap: 12px !important;
+            }
+
+            /* Stats cards smaller text */
+            [style*="font-size: 2.8rem"],
+            [style*="font-size: 2.5rem"],
+            [style*="font-size: 2.2rem"],
+            [style*="font-size: 2rem"] {
+                font-size: 1.8rem !important;
+            }
+
+            [style*="font-size: 1.8rem"] {
+                font-size: 1.5rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            /* 2-column grids to 1 column on very small screens */
+            .viz-section [style*="grid-template-columns: repeat(2"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Steps list more compact */
+            .steps-list li {
+                padding-left: 36px;
+                font-size: 0.85rem;
+            }
+
+            .steps-list li::before {
+                width: 22px;
+                height: 22px;
+                font-size: 0.7rem;
+            }
+
+            /* Methodology steps */
+            .methodology-step {
+                gap: 12px !important;
+            }
+
+            .methodology-step > div:first-child {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 0.8rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Side Navigation (desktop only) -->
+    <nav class="side-nav">
+        <div class="nav-section">Visualizations</div>
+        <a href="#network-universe">1. Network Universe</a>
+        <a href="#linkedin-inferences">2. Inferences vs Reality</a>
+        <a href="#high-value-messages">3. Messages to Reply</a>
+        <a href="#posting-correlation">4. Does Posting Work?</a>
+        <a href="#company-clusters">5. Who You Follow</a>
+        <a href="#inbound-outbound">6. Inbound vs Outbound</a>
+        <a href="#connections-vs-relationships">7. Real Relationships</a>
+        <a href="#connection-timeline">8. Timeline</a>
+        <a href="#inbox-quality">9. Inbox Quality</a>
+        <a href="#career-strata">10. Career Layers</a>
+        <div class="nav-section">Resources</div>
+        <a href="#style-guide">Style Guide</a>
+        <a href="#publishing">Publish Your Own</a>
+    </nav>
+
+    <div class="container">
+        <h1>Visualize Your LinkedIn Data Export</h1>
+        <p class="subtitle">An experiment by <a href="https://www.linkedin.com/in/logan-currie/" style="color: var(--accent-primary); text-decoration: none;">Logan Currie</a> using <a href="https://claude.ai/download" style="color: var(--accent-secondary); text-decoration: none;">Claude Code</a></p>
+
+        <!-- Hook -->
+        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 40px; line-height: 1.6;">LinkedIn knows everything about your professional life, but their interface only shows you a fraction of it. The data was always there. I just couldn't see it. So I downloaded all 50 files and made AI read them.</p>
+
+        <!-- Top Boxes - Side by Side -->
+        <div class="top-boxes-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+            <!-- About Section -->
+            <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 24px; border-left: 3px solid var(--accent-primary);">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                    <strong style="color: var(--text-primary);">Note:</strong> This uses my real LinkedIn data. I've removed identifying info about other people and simplified some details so you can see what these visualizations could look like with your own export. I found this exercise fascinating. <a href="https://loganinthefuture.substack.com/p/captains-log-8-linkedin-thinks-im" style="color: var(--accent-primary);">Read my full thoughts on Substack →</a>
+                </p>
+            </div>
+
+            <!-- CTA Box -->
+            <div style="background: linear-gradient(135deg, rgba(122,158,159,0.15) 0%, rgba(122,158,159,0.05) 100%); border: 1px solid rgba(122,158,159,0.3); border-radius: 6px; padding: 24px;">
+                <p style="color: var(--text-primary); font-size: 0.95rem; margin: 0 0 6px 0; font-weight: 500;">
+                    I'm sure I'm just scratching the surface here.
+                </p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                    If you try this and get interesting results, <a href="https://www.linkedin.com/in/logan-currie/" style="color: var(--accent-primary); font-weight: 500;">DM me</a>. Send this page to a friend. It's all free. Let's see how far this travels.
+                </p>
+            </div>
+        </div>
+
+        <!-- Intro Section -->
+        <div class="intro-section">
+            <h2>How to Get Started</h2>
+            <ol class="steps-list">
+                <li><strong>Request your LinkedIn data export.</strong> Go to Settings → Data Privacy → Get a copy of your data. Select "Download larger data archive" for the complete export. Takes about 24 hours.</li>
+                <li><strong>Unzip the file.</strong> You'll get ~50 CSV files with everything LinkedIn knows about you.</li>
+                <li><strong>Open <a href="https://claude.ai/download" style="color: var(--accent-primary);">Claude Code</a></strong> and point it at your export folder. I really encourage you to try Claude Code if you haven't. This is a great way to see what all the hype is about.</li>
+                <li><strong>Ask questions.</strong> Use the prompts below to generate each visualization. Copy/paste them directly.</li>
+                <li><strong>Get creative.</strong> There's so much more you could do with this data. These are just some examples.</li>
+            </ol>
+
+            <div style="background: rgba(201,169,98,0.08); border-radius: 4px; padding: 16px 20px; margin-top: 20px;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                    <strong style="color: var(--accent-primary);">💡 On AI tools:</strong> I recommend <a href="https://claude.ai/download" style="color: var(--accent-primary);">Claude Code</a> because it handles large context windows well. I use Claude Code Max ($100/mo) which let me analyze all 50 CSVs in extended sessions. On the Pro plan ($20/mo), you can absolutely do this. Just focus on 2-3 CSV files per session and spread it across a few days. The prompts below work great either way.
+                </p>
+            </div>
+
+            <div class="toc">
+                <h3>Visualizations</h3>
+                <ol class="toc-list">
+                    <li><a href="#network-universe">Your Network as a Universe</a></li>
+                    <li><a href="#linkedin-inferences">LinkedIn's Inferences vs Reality</a></li>
+                    <li><a href="#high-value-messages">High-Value Messages to Reply To</a></li>
+                    <li><a href="#posting-correlation">Does Posting Actually Work?</a></li>
+                    <li><a href="#company-clusters">Who You Actually Follow</a></li>
+                    <li><a href="#inbound-outbound">Inbound vs Outbound Connections</a></li>
+                    <li><a href="#connections-vs-relationships">Connections vs Real Relationships</a></li>
+                    <li><a href="#connection-timeline">Connection Timeline</a></li>
+                    <li><a href="#inbox-quality">Inbox Quality Analysis</a></li>
+                    <li><a href="#career-strata">Your Career in Layers</a></li>
+                </ol>
+                <h3 style="margin-top: 20px;">Resources</h3>
+                <ul class="toc-list" style="list-style: none;">
+                    <li><a href="#style-guide">Style Guide</a></li>
+                    <li><a href="#publishing">Publish Your Own</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 1. Network Universe Force Graph -->
+        <div class="viz-section" id="network-universe">
+            <h2>1. Your Network as a Universe</h2>
+            <p class="description">Every node = a cluster based on current employer or industry. Size = number of connections. Drag to explore.</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: -20px; margin-bottom: 20px; font-style: italic;">Note: LinkedIn only exports current employer — not full work history or education. So this is a snapshot, not the complete picture.</p>
+
+            <div id="networkGraph" style="width: 100%; height: 600px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden;"></div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 28px; justify-content: center;">
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #7a9e9f; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">Founders</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #a5897a; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">Academia</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #9b8aa5; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">AI/ML</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #7d8a99; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">EdTech</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #c9a962; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">VC/Investors</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #8fa387; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">HR/Talent</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; background: #b08b8b; border-radius: 2px;"></span><span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 300;">Big Tech</span></div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Analyze my Connections.csv file. Group my connections by their current company or industry. Show me the top 10 clusters by size and create a force-directed network visualization."</div>
+                <div class="csv-note">Uses: Connections.csv</div>
+            </div>
+        </div>
+
+        <!-- 2. LinkedIn Inferences vs Reality -->
+        <div class="viz-section" id="linkedin-inferences">
+            <h2>2. LinkedIn's Inferences vs Reality</h2>
+            <p class="description">What LinkedIn thinks they know about you for ad targeting vs. what your data actually shows.</p>
+
+            <div class="skills-comparison">
+                <div class="skills-column bad">
+                    <h3>What LinkedIn Thinks</h3>
+                    <span class="skill-tag">Hostage Negotiation</span>
+                    <span class="skill-tag">Bathing</span>
+                    <span class="skill-tag">Fisheries Management</span>
+                    <span class="skill-tag">Hunting Land</span>
+                    <span class="skill-tag">Archery</span>
+                    <span class="skill-tag">Garden Design</span>
+                    <span class="skill-tag">Toy Sales</span>
+                    <span class="skill-tag">Harley Davidson</span>
+                </div>
+                <div class="skills-column good">
+                    <h3>What Your Data Shows</h3>
+                    <span class="skill-tag">Future of Work</span>
+                    <span class="skill-tag">AI & Hiring</span>
+                    <span class="skill-tag">Career Development</span>
+                    <span class="skill-tag">Educational Technology</span>
+                    <span class="skill-tag">Content Strategy</span>
+                    <span class="skill-tag">Startup Building</span>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Open my Inferences_about_you.csv and Ad_Targeting.csv. What does LinkedIn think they know about me? Compare this to my actual interests based on Company_Follows.csv and my content."</div>
+                <div class="csv-note">Uses: Inferences_about_you.csv, Ad_Targeting.csv, Company_Follows.csv</div>
+            </div>
+        </div>
+
+        <!-- 3. High-Value Messages to Reply To -->
+        <div class="viz-section" id="high-value-messages">
+            <h2>3. High-Value Messages to Reply To</h2>
+            <p class="description">Find warm leads, collaboration offers, and genuine outreach buried in your inbox.</p>
+
+            <div class="message-card">
+                <div class="message-header">
+                    <span class="message-type">Collaboration Offer</span>
+                    <span class="message-age">6 days ago</span>
+                </div>
+                <div class="message-preview">"Hope you are good. Happy New Year! As you know, I work with [Company]..."</div>
+            </div>
+
+            <div class="message-card">
+                <div class="message-header">
+                    <span class="message-type">Follow-up</span>
+                    <span class="message-age">8 days ago</span>
+                </div>
+                <div class="message-preview">"Just sending this in case I got lost in your inbox..."</div>
+            </div>
+
+            <div class="message-card">
+                <div class="message-header">
+                    <span class="message-type">Meeting Request</span>
+                    <span class="message-age">10 days ago</span>
+                </div>
+                <div class="message-preview">"I'm pretty free on Tues, Thurs or Fri..."</div>
+            </div>
+
+            <div class="message-card" style="border-left-color: var(--data-1);">
+                <div class="message-header">
+                    <span class="message-type" style="color: var(--data-1);">Warm Intro</span>
+                    <span class="message-age">9 days ago</span>
+                </div>
+                <div class="message-preview">"Nice to meet you! Thanks for the intro..."</div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Go through my messages.csv and identify 10 high-value messages I should reply to. Prioritize warm leads, collaboration offers, podcast invitations, and genuine professional outreach. Include messages from the last few months but no time limit for truly high-value ones."</div>
+                <div class="csv-note">Uses: messages.csv</div>
+            </div>
+        </div>
+
+        <!-- 4. Does Posting Actually Work? -->
+        <div class="viz-section" id="posting-correlation">
+            <h2>4. Does Posting Actually Work?</h2>
+            <p class="description">Correlation between posting frequency and new connection requests.</p>
+
+            <div class="chart-container tall">
+                <canvas id="postsVsConnectionsChart"></canvas>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 25px;">
+                <div style="background: rgba(122,158,159,0.1); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 24px; text-align: center;">
+                    <div style="font-size: 2.2rem; font-weight: 300; color: var(--data-2);">0.71</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 300;">correlation coefficient</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px; font-weight: 300;">(that's strong)</div>
+                </div>
+                <div style="background: rgba(201,169,98,0.1); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 24px; text-align: center;">
+                    <div style="font-size: 2.2rem; font-weight: 300; color: var(--data-1);">1833%</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 300;">more connections/month</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px; font-weight: 300;">after consistent posting</div>
+                </div>
+                <div style="background: rgba(155,138,165,0.1); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 24px; text-align: center;">
+                    <div style="font-size: 2.2rem; font-weight: 300; color: var(--data-3);">5 → 100</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 300;">avg connections/month</div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px; font-weight: 300;">before vs after</div>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Is there a correlation between posting frequency and new connections? Compare my Shares.csv (posts) with Connections.csv (connection dates) by month. Calculate the correlation coefficient and visualize both on a chart."</div>
+                <div class="csv-note">Uses: Shares.csv, Connections.csv</div>
+            </div>
+        </div>
+
+        <!-- 5. Company Clusters -->
+        <div class="viz-section" id="company-clusters">
+            <h2>5. Who You Actually Follow</h2>
+            <p class="description">The companies you follow reveal your real professional interests — often more accurately than LinkedIn's ad targeting.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px;">
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--data-2); margin-bottom: 10px;">EdTech / Learning</div>
+                    <div style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary);">~80</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">companies</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--data-1); margin-bottom: 10px;">Job Search / Career</div>
+                    <div style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary);">~60</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">companies</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--data-3); margin-bottom: 10px;">AI Companies</div>
+                    <div style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary);">~50</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">companies</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--data-4); margin-bottom: 10px;">Future of Work / HR</div>
+                    <div style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary);">~45</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">companies</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--data-5); margin-bottom: 10px;">Women's Networks</div>
+                    <div style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary);">~35</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">companies</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--data-6); margin-bottom: 10px;">VC / Startups</div>
+                    <div style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary);">~30</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">companies</div>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Cluster the companies I follow by theme. Analyze my Company_Follows.csv and group them into categories like EdTech, AI, VC, etc. Show me how many companies are in each cluster."</div>
+                <div class="csv-note">Uses: Company_Follows.csv</div>
+            </div>
+        </div>
+
+        <!-- 6. Inbound vs Outbound -->
+        <div class="viz-section" id="inbound-outbound">
+            <h2>6. Inbound vs Outbound Connections</h2>
+            <p class="description">Are people finding you, or are you chasing them?</p>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot incoming"></div>
+                    <span>They found me (inbound)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot outgoing"></div>
+                    <span>I reached out (outbound)</span>
+                </div>
+            </div>
+
+            <div class="invitation-flow">
+                <div class="flow-month">
+                    <div class="month-label">Jul 2025</div>
+                    <div class="flow-bars">
+                        <div class="flow-bar incoming" style="width: 134px;">67</div>
+                        <div class="flow-bar outgoing" style="width: 50px;">25</div>
+                    </div>
+                </div>
+                <div class="flow-month">
+                    <div class="month-label">Aug 2025</div>
+                    <div class="flow-bars">
+                        <div class="flow-bar incoming" style="width: 180px;">90</div>
+                        <div class="flow-bar outgoing" style="width: 54px;">27</div>
+                    </div>
+                </div>
+                <div class="flow-month">
+                    <div class="month-label">Sep 2025</div>
+                    <div class="flow-bars">
+                        <div class="flow-bar incoming" style="width: 258px;">129</div>
+                        <div class="flow-bar outgoing" style="width: 82px;">41</div>
+                    </div>
+                </div>
+                <div class="flow-month">
+                    <div class="month-label">Oct 2025</div>
+                    <div class="flow-bars">
+                        <div class="flow-bar incoming" style="width: 184px;">92</div>
+                        <div class="flow-bar outgoing" style="width: 88px;">44</div>
+                    </div>
+                </div>
+                <div class="flow-month">
+                    <div class="month-label">Nov 2025</div>
+                    <div class="flow-bars">
+                        <div class="flow-bar incoming" style="width: 102px;">51</div>
+                        <div class="flow-bar outgoing" style="width: 14px;">7</div>
+                    </div>
+                </div>
+                <div class="flow-month">
+                    <div class="month-label">Dec 2025</div>
+                    <div class="flow-bars">
+                        <div class="flow-bar incoming" style="width: 186px;">93</div>
+                        <div class="flow-bar outgoing" style="width: 16px;">8</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 25px;">
+                <div style="background: linear-gradient(135deg, var(--data-2) 0%, #5a8384 100%); padding: 28px; border-radius: 8px; text-align: center; color: white;">
+                    <div style="font-size: 2.8rem; font-weight: 300;">3.69×</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">more people find you</div>
+                    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 4px;">than you chase</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 24px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 300; color: var(--data-1);">78.6%</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">acceptance rate</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">vs 25-35% avg</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 24px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: 300; color: var(--data-3);">129</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">peak month inbound</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">Sep 2025</div>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Compare my inbound vs outbound connection requests over the last 6 months. Using Invitations.csv, show me how many people requested to connect with me vs how many I reached out to. Calculate my acceptance rate and visualize the trend."</div>
+                <div class="csv-note">Uses: Invitations.csv</div>
+            </div>
+        </div>
+
+        <!-- 7. Connections vs Relationships -->
+        <div class="viz-section" id="connections-vs-relationships">
+            <h2>7. Connections vs Real Relationships</h2>
+            <p class="description">Of your connections, how many have you actually messaged in the last year?</p>
+
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 30px 0;">
+                <div style="background: rgba(122,158,159,0.15); border-radius: 8px; padding: 20px 14px; text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 400; color: var(--data-2);">~100</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Active</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">5+ DMs this year</div>
+                </div>
+                <div style="background: rgba(201,169,98,0.1); border-radius: 8px; padding: 20px 14px; text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 400; color: var(--data-1);">~400</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Some contact</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">1-4 DMs this year</div>
+                </div>
+                <div style="background: rgba(165,137,122,0.08); border-radius: 8px; padding: 20px 14px; text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 400; color: var(--data-4);">~800</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Going stale</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">6-12 mo since DM</div>
+                </div>
+                <div style="background: rgba(176,128,128,0.06); border-radius: 8px; padding: 20px 14px; text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 400; color: var(--negative);">~500</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Dormant</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">1-2 yrs since DM</div>
+                </div>
+                <div style="background: rgba(180,180,190,0.06); border-radius: 8px; padding: 20px 14px; text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 400; color: #999;">~1,580</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Never messaged</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Just... a name</div>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Of my connections, how many are actual relationships vs. names I've collected? Cross-reference Connections.csv with messages.csv to categorize connections by how recently we've messaged (active, some contact, going stale, dormant, never messaged)."</div>
+                <div class="csv-note">Uses: Connections.csv, messages.csv</div>
+            </div>
+        </div>
+
+        <!-- 8. Connection Timeline -->
+        <div class="viz-section" id="connection-timeline">
+            <h2>8. Connection Timeline</h2>
+            <p class="description">LinkedIn shows "Connected." The data export shows <em>when</em>, <em>who reached out</em>, and <em>whether you ever spoke again</em>.</p>
+
+            <!-- Horizontal timeline header -->
+            <div class="timeline-header-wrapper" style="margin-bottom: 20px;">
+                <div class="timeline-month-labels" style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); padding: 0 60px;">
+                    <span>Jul 2025</span>
+                    <span class="hide-mobile">Aug</span>
+                    <span class="hide-mobile">Sep</span>
+                    <span class="hide-mobile">Oct</span>
+                    <span class="hide-mobile">Nov</span>
+                    <span class="hide-mobile">Dec</span>
+                    <span>Jan 2026</span>
+                </div>
+            </div>
+
+            <!-- Gantt-style timeline rows -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--data-2) 0%, var(--data-5) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; font-size: 0.9rem;">A</div>
+                    <div style="flex: 1; height: 32px; background: var(--bg-tertiary); border-radius: 4px; position: relative;">
+                        <div style="position: absolute; left: 16.6%; right: 0; height: 100%; background: linear-gradient(90deg, var(--data-2) 0%, var(--data-2) 100%); border-radius: 4px; display: flex; align-items: center; padding-left: 12px;">
+                            <span style="font-size: 0.7rem; color: white;">They added me • 15 DMs</span>
+                            <div style="position: absolute; right: 8px; display: flex; gap: 3px;">
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--data-1) 0%, var(--data-4) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; font-size: 0.9rem;">B</div>
+                    <div style="flex: 1; height: 32px; background: var(--bg-tertiary); border-radius: 4px; position: relative;">
+                        <div style="position: absolute; left: 50%; right: 0; height: 100%; background: linear-gradient(90deg, var(--data-1) 0%, var(--data-1) 100%); border-radius: 4px; display: flex; align-items: center; padding-left: 12px;">
+                            <span style="font-size: 0.7rem; color: white;">I added them • 3 DMs</span>
+                            <div style="position: absolute; right: 8px; display: flex; gap: 3px;">
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #bbb 0%, #ddd 100%); display: flex; align-items: center; justify-content: center; color: #666; font-weight: 500; font-size: 0.9rem;">C</div>
+                    <div style="flex: 1; height: 32px; background: var(--bg-tertiary); border-radius: 4px; position: relative;">
+                        <div style="position: absolute; left: 33.3%; right: 0; height: 100%; background: #d5d5d5; border-radius: 4px; display: flex; align-items: center; padding-left: 12px;">
+                            <span style="font-size: 0.7rem; color: #777;">They added me • never spoke</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--data-3) 0%, var(--data-7) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; font-size: 0.9rem;">D</div>
+                    <div style="flex: 1; height: 32px; background: var(--bg-tertiary); border-radius: 4px; position: relative;">
+                        <div style="position: absolute; left: 66.6%; right: 0; height: 100%; background: linear-gradient(90deg, var(--data-3) 0%, var(--data-3) 100%); border-radius: 4px; display: flex; align-items: center; padding-left: 12px;">
+                            <span style="font-size: 0.7rem; color: white;">They added me • 5 DMs</span>
+                            <div style="position: absolute; right: 8px; display: flex; gap: 3px;">
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ccc 0%, #eee 100%); display: flex; align-items: center; justify-content: center; color: #666; font-weight: 500; font-size: 0.9rem;">E</div>
+                    <div style="flex: 1; height: 32px; background: var(--bg-tertiary); border-radius: 4px; position: relative;">
+                        <div style="position: absolute; left: 0; right: 0; height: 100%; background: #d5d5d5; border-radius: 4px; display: flex; align-items: center; padding-left: 12px;">
+                            <span style="font-size: 0.7rem; color: #777;">They added me • never spoke</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--data-5) 0%, var(--data-2) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; font-size: 0.9rem;">F</div>
+                    <div style="flex: 1; height: 32px; background: var(--bg-tertiary); border-radius: 4px; position: relative;">
+                        <div style="position: absolute; left: 16.6%; right: 0; height: 100%; background: linear-gradient(90deg, var(--data-5) 0%, var(--data-5) 100%); border-radius: 4px; display: flex; align-items: center; padding-left: 12px;">
+                            <span style="font-size: 0.7rem; color: white;">I added them • 8 DMs</span>
+                            <div style="position: absolute; right: 8px; display: flex; gap: 3px;">
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%; opacity: 0.9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="timeline-legend" style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: 16px 24px; font-size: 0.8rem; color: var(--text-muted);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 12px; background: var(--data-2); border-radius: 2px; flex-shrink: 0;"></div>
+                    <span>They found me</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 12px; background: var(--data-1); border-radius: 2px; flex-shrink: 0;"></div>
+                    <span>I reached out</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 12px; background: #d5d5d5; border-radius: 2px; flex-shrink: 0;"></div>
+                    <span>Never messaged</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%; flex-shrink: 0;"></div>
+                    <span>= message exchanged</span>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Show me a timeline of recent connections. For each person, show when we connected, who initiated, and how many messages we've exchanged since. Use Connections.csv, Invitations.csv, and messages.csv."</div>
+                <div class="csv-note">Uses: Connections.csv, Invitations.csv, messages.csv</div>
+            </div>
+        </div>
+
+        <!-- 9. Inbox Quality -->
+        <div class="viz-section" id="inbox-quality">
+            <h2>9. Inbox Quality Analysis</h2>
+            <p class="description">Does your inbox feel noisier? The data shows what percentage is genuine vs spam.</p>
+
+            <div class="chart-container">
+                <canvas id="noiseChart"></canvas>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 25px;">
+                <div style="background: rgba(122,158,122,0.12); border: 1px solid var(--positive); border-radius: 6px; padding: 24px;">
+                    <div style="font-size: 2rem; font-weight: 300; color: var(--positive);">91%</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 300;">of inbound messages are genuine</div>
+                </div>
+                <div style="background: rgba(201,169,98,0.12); border: 1px solid var(--data-1); border-radius: 6px; padding: 24px;">
+                    <div style="font-size: 2rem; font-weight: 300; color: var(--data-1);">3x</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 300;">more messages in 2025</div>
+                </div>
+                <div style="background: rgba(176,128,128,0.08); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 24px;">
+                    <div style="font-size: 2rem; font-weight: 300; color: var(--negative);">~9%</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 300;">actual noise (spam, pitches)</div>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Analyze my messages.csv. What percentage of inbound messages are genuine professional outreach vs. spam/sales pitches? Show the breakdown by half-year and visualize the trend."</div>
+                <div class="csv-note">Uses: messages.csv</div>
+            </div>
+        </div>
+
+        <!-- 10. Career Strata -->
+        <div class="viz-section" id="career-strata">
+            <h2>10. Your Career in Layers</h2>
+            <p class="description">Each layer = a chapter of your career. The width = how many connections you made during that period.</p>
+
+            <div class="strata-container">
+                <div class="strata-layer" style="border-left: 4px solid var(--data-1); background: rgba(201,169,98,0.03);">
+                    <div class="era">2008-2012: The Early Days</div>
+                    <div class="details">First professional network • 50 connections</div>
+                    <div class="count">50</div>
+                </div>
+                <div class="strata-layer" style="border-left: 4px solid var(--data-4); background: rgba(165,137,122,0.05);">
+                    <div class="era">2013-2016: Building Overseas</div>
+                    <div class="details">International work, expat network • 284 connections</div>
+                    <div class="count">284</div>
+                </div>
+                <div class="strata-layer" style="border-left: 4px solid var(--data-7); background: rgba(125,138,153,0.03);">
+                    <div class="era">2017-2022: Heads Down</div>
+                    <div class="details">Company building, raising family overseas • 53 connections</div>
+                    <div class="count">53</div>
+                </div>
+                <div class="strata-layer" style="border-left: 4px solid var(--data-3); background: rgba(155,138,165,0.04);">
+                    <div class="era">2023: The Wake-Up Call</div>
+                    <div class="details">Rebuilding network after years overseas, launched company • 124 connections</div>
+                    <div class="count">124</div>
+                </div>
+                <div class="strata-layer" style="border-left: 4px solid var(--data-5); background: rgba(143,163,135,0.06);">
+                    <div class="era">2024: Building in Public</div>
+                    <div class="details">Startup launch, content creation begins • 903 connections</div>
+                    <div class="count">903</div>
+                </div>
+                <div class="strata-layer" style="border-left: 4px solid var(--data-2); background: rgba(122,158,159,0.08);">
+                    <div class="era">2025-2026: The Visibility Era</div>
+                    <div class="details">Viral content, public thought leadership • 1,093 connections</div>
+                    <div class="count">1,093</div>
+                </div>
+            </div>
+
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Analyze my Connections.csv by connection date. Group connections by year and show me how my network grew during different periods of my career. Visualize this as layers showing network expansion over time."</div>
+                <div class="csv-note">Uses: Connections.csv</div>
+            </div>
+        </div>
+
+        <!-- Methodology Section -->
+        <div class="viz-section" style="background: var(--bg-tertiary); border: none;">
+            <h2>How This Was Made</h2>
+            <p class="description">A human + AI collaboration, start to finish.</p>
+
+            <div style="display: grid; gap: 20px;">
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">1</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Data Export</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Downloaded my LinkedIn data (Settings → Data Privacy → Get a copy). Got 50+ CSV files covering connections, messages, posts, invitations, ad targeting, and more.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">2</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Exploratory Analysis</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Pointed Claude Code at the folder and started asking questions: "What's in here?" → "Show me patterns" → "What would be interesting to visualize?" We iterated through dozens of ideas.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">3</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Visualization Development</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Claude Code generated the HTML, CSS, and JavaScript (Chart.js + D3.js). I gave feedback on design, asked for revisions, and we refined together until the visualizations told the story I wanted.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">4</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Privacy Scrub</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Removed names and identifying details of other people. Kept my data real so you can see what's actually possible with your own export.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-secondary); border-radius: 6px; padding: 20px 24px; margin-top: 30px; border: 1px solid var(--border-subtle);">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                    <strong style="color: var(--text-primary);">Tools used:</strong> Claude Code (Max plan) for analysis and code generation, Chart.js for bar/line charts, D3.js for the force-directed network graph. Total development time: ~4 hours across multiple sessions.
+                </p>
+            </div>
+        </div>
+
+        <!-- Style Guide Section -->
+        <div class="viz-section" id="style-guide">
+            <h2>Style Guide</h2>
+            <p class="description">Want your visualizations to look like these? Here's what we used.</p>
+
+            <div style="display: grid; gap: 24px; margin-top: 20px;">
+                <div>
+                    <strong style="color: var(--text-primary);">Color Palette</strong>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 8px 0 12px 0;">Muted, sophisticated tones that work on light backgrounds.</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #b8943d; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#b8943d</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">gold</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #5a8384; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#5a8384</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">sage</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #7a6a8a; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#7a6a8a</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">lavender</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #8a7060; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#8a7060</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">taupe</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #6a8362; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#6a8362</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">moss</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #9a6a6a; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#9a6a6a</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">rose</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 4px;">
+                            <div style="width: 20px; height: 20px; background: #5a6a7a; border-radius: 3px;"></div>
+                            <code style="font-size: 0.8rem; color: var(--text-secondary);">#5a6a7a</code>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">slate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <strong style="color: var(--text-primary);">Typography</strong>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 8px 0 0 0;">
+                        Font: <a href="https://fonts.google.com/specimen/Inter" style="color: var(--accent-primary);">Inter</a> (Google Fonts) — clean, modern, great for data.<br>
+                        Headers: 300-500 weight, tight letter-spacing (-0.02em to -0.03em).<br>
+                        Body: 400 weight, 1.7 line-height for readability.
+                    </p>
+                </div>
+
+                <div>
+                    <strong style="color: var(--text-primary);">Libraries</strong>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 8px 0 0 0;">
+                        <a href="https://www.chartjs.org/" style="color: var(--accent-primary);">Chart.js</a> — bar charts, line charts, simple stuff.<br>
+                        <a href="https://d3js.org/" style="color: var(--accent-primary);">D3.js</a> — force-directed network graph (the cool floating one).<br>
+                        Everything else is vanilla HTML/CSS.
+                    </p>
+                </div>
+
+                <div>
+                    <strong style="color: var(--text-primary);">Prompt for matching this style</strong>
+                    <div class="prompt-box" style="margin-top: 12px;">
+                        <div class="prompt-text">"Generate an HTML visualization using this color palette: gold #b8943d, sage #5a8384, lavender #7a6a8a, taupe #8a7060, moss #6a8362, rose #9a6a6a, slate #5a6a7a. Use Inter font from Google Fonts. Light background (#ffffff), muted professional aesthetic. Use Chart.js for simple charts, D3.js for network graphs."</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Publishing Section -->
+        <div class="viz-section" id="publishing">
+            <h2>Publish Your Own</h2>
+            <p class="description">Made something cool? Here's how to share it.</p>
+
+            <div style="display: grid; gap: 20px; margin-top: 20px;">
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">1</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Save your HTML file</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Ask Claude Code to export your visualization as a single HTML file. All CSS and JavaScript should be inline (no external files needed).</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">2</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Privacy scrub</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Remove names and identifying info of other people before publishing. Your data, your choice — but be respectful of others.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">3</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Host it free</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">
+                            <strong>GitHub Pages:</strong> Push to a repo, enable Pages in settings, done. Free custom domain support.<br>
+                            <strong>Netlify:</strong> Drag and drop your HTML file. Instant URL.<br>
+                            <strong>Vercel:</strong> Same deal — free tier is plenty for a single HTML page.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="width: 32px; height: 32px; background: var(--accent-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; flex-shrink: 0;">4</div>
+                    <div>
+                        <strong style="color: var(--text-primary);">Share it</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Post on LinkedIn, Twitter, wherever. Screenshots of the cool visualizations work great. Link to the live page for anyone who wants to dig deeper.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div style="background: linear-gradient(135deg, rgba(122,158,159,0.15) 0%, rgba(122,158,159,0.05) 100%); border: 1px solid rgba(122,158,159,0.3); border-radius: 8px; padding: 30px; margin-bottom: 60px; text-align: center;">
+            <p style="color: var(--text-primary); font-size: 1.1rem; margin: 0 0 12px 0; font-weight: 500;">
+                Made something? I want to see it!
+            </p>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0 0 20px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Share your weirdest LinkedIn inference, your coolest visualization, or just tell me if this was useful. I'm building in public and love seeing what other people create.
+            </p>
+            <a href="https://www.linkedin.com/in/logan-currie/" style="display: inline-flex; align-items: center; gap: 8px; background: var(--accent-primary); color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 0.9rem;">
+                Tag me on LinkedIn
+            </a>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 20px 0 0 0;">
+                If you publish your own version, link back here. Let's see how far this travels.
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Sophisticated color palette for light background
+        const colors = {
+            gold: '#b8943d',
+            sage: '#5a8384',
+            lavender: '#7a6a8a',
+            taupe: '#8a7060',
+            moss: '#6a8362',
+            rose: '#9a6a6a',
+            slate: '#5a6a7a',
+            stone: '#7a6a5a',
+            bronze: '#6a5040',
+            text: '#666666',
+            muted: '#999999',
+            gridLine: 'rgba(0,0,0,0.06)',
+            positive: '#4a7a4a',
+            negative: '#9a5a5a'
+        };
+
+        // Inbox Reality Chart - Genuine vs Noise
+        const noiseCtx = document.getElementById('noiseChart').getContext('2d');
+        new Chart(noiseCtx, {
+            type: 'bar',
+            data: {
+                labels: ['H1 2024', 'H2 2024', 'H1 2025', 'H2 2025'],
+                datasets: [{
+                    label: 'Genuine Messages',
+                    data: [692, 292, 704, 1021],
+                    backgroundColor: 'rgba(90, 131, 132, 0.85)',
+                    borderColor: colors.sage,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }, {
+                    label: 'Noise (Spam/Pitches)',
+                    data: [39, 45, 63, 106],
+                    backgroundColor: 'rgba(176, 128, 128, 0.7)',
+                    borderColor: colors.negative,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: colors.text, font: { family: 'Inter', weight: 400 } }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Volume tripled, but 90%+ of messages are genuine',
+                        color: colors.text,
+                        font: { family: 'Inter', size: 13, weight: 400 }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text, font: { family: 'Inter', size: 12, weight: 400 } }
+                    },
+                    y: {
+                        grid: { color: colors.gridLine },
+                        ticks: { color: colors.muted, font: { family: 'Inter', size: 11 } },
+                        title: {
+                            display: true,
+                            text: 'Messages',
+                            color: colors.muted,
+                            font: { family: 'Inter', size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Posts vs Connections Chart
+        const postsConnCtx = document.getElementById('postsVsConnectionsChart').getContext('2d');
+        new Chart(postsConnCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Nov 23', 'Dec 23', 'Jan 24', 'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24', 'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25'],
+                datasets: [{
+                    label: 'New Connections',
+                    data: [35, 79, 80, 129, 116, 231, 118, 115, 32, 69, 21, 86, 88, 73, 87, 136, 110, 121, 81, 167, 182, 117, 151, 113, 72],
+                    backgroundColor: 'rgba(201, 169, 98, 0.5)',
+                    borderColor: colors.gold,
+                    borderWidth: 1,
+                    borderRadius: 3,
+                    yAxisID: 'y'
+                }, {
+                    label: 'Posts',
+                    data: [2, 2, 2, 3, 4, 7, 5, 2, 2, 2, 0, 3, 2, 2, 1, 4, 3, 4, 0, 4, 4, 2, 3, 1, 1],
+                    type: 'line',
+                    borderColor: colors.sage,
+                    backgroundColor: 'rgba(122, 158, 159, 0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: colors.text, font: { family: 'Inter', weight: 300 } }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Correlation: 0.71 — Posting drives connection growth',
+                        color: colors.text,
+                        font: { family: 'Inter', size: 13, weight: 300 }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.muted, font: { family: 'Inter', size: 11 } }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: colors.gridLine },
+                        ticks: { color: colors.gold, font: { family: 'Inter', size: 11 } },
+                        title: {
+                            display: true,
+                            text: 'New Connections',
+                            color: colors.gold,
+                            font: { family: 'Inter', weight: 300 }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: colors.sage, font: { family: 'Inter', size: 11 } },
+                        title: {
+                            display: true,
+                            text: 'Posts',
+                            color: colors.sage,
+                            font: { family: 'Inter', weight: 300 }
+                        },
+                        max: 15
+                    }
+                }
+            }
+        });
+
+        // Force-Directed Network Graph
+        const networkData = {
+            nodes: [
+                { id: 'You', group: 'center', size: 60, color: '#1a1a1a' },
+                // Main clusters
+                { id: 'Founders', group: 'cluster', size: 54, color: colors.sage, count: 584 },
+                { id: 'Academia', group: 'cluster', size: 38, color: colors.taupe, count: 340 },
+                { id: 'AI/ML', group: 'cluster', size: 37, color: colors.lavender, count: 330 },
+                { id: 'EdTech', group: 'cluster', size: 27, color: colors.slate, count: 185 },
+                { id: 'VC/Investors', group: 'cluster', size: 21, color: colors.gold, count: 97 },
+                { id: 'HR/Talent', group: 'cluster', size: 19, color: colors.moss, count: 65 },
+                { id: 'Big Tech', group: 'cluster', size: 18, color: colors.rose, count: 53 },
+                { id: 'Consulting', group: 'cluster', size: 18, color: colors.stone, count: 45 },
+                // Founder sub-nodes
+                { id: 'YC Alumni', group: 'subnode', size: 14, color: colors.sage, parent: 'Founders' },
+                { id: 'Techstars', group: 'subnode', size: 12, color: colors.sage, parent: 'Founders' },
+                { id: 'On Deck', group: 'subnode', size: 11, color: colors.sage, parent: 'Founders' },
+                { id: 'Indie Hackers', group: 'subnode', size: 10, color: colors.sage, parent: 'Founders' },
+                // Academia sub-nodes
+                { id: 'Stanford', group: 'subnode', size: 13, color: colors.taupe, parent: 'Academia' },
+                { id: 'MIT', group: 'subnode', size: 12, color: colors.taupe, parent: 'Academia' },
+                { id: 'Harvard', group: 'subnode', size: 11, color: colors.taupe, parent: 'Academia' },
+                { id: 'Berkeley', group: 'subnode', size: 10, color: colors.taupe, parent: 'Academia' },
+                // AI/ML sub-nodes
+                { id: 'Anthropic', group: 'subnode', size: 13, color: colors.lavender, parent: 'AI/ML' },
+                { id: 'OpenAI', group: 'subnode', size: 12, color: colors.lavender, parent: 'AI/ML' },
+                { id: 'Hugging Face', group: 'subnode', size: 10, color: colors.lavender, parent: 'AI/ML' },
+                { id: 'Cohere', group: 'subnode', size: 9, color: colors.lavender, parent: 'AI/ML' },
+                // EdTech sub-nodes
+                { id: 'Khan Academy', group: 'subnode', size: 11, color: colors.slate, parent: 'EdTech' },
+                { id: 'Coursera', group: 'subnode', size: 10, color: colors.slate, parent: 'EdTech' },
+                { id: 'Duolingo', group: 'subnode', size: 9, color: colors.slate, parent: 'EdTech' },
+                // VC sub-nodes
+                { id: 'a16z', group: 'subnode', size: 11, color: colors.gold, parent: 'VC/Investors' },
+                { id: 'Sequoia', group: 'subnode', size: 10, color: colors.gold, parent: 'VC/Investors' },
+                { id: 'GSV', group: 'subnode', size: 9, color: colors.gold, parent: 'VC/Investors' },
+                // Big Tech sub-nodes
+                { id: 'Google', group: 'subnode', size: 11, color: colors.rose, parent: 'Big Tech' },
+                { id: 'Meta', group: 'subnode', size: 10, color: colors.rose, parent: 'Big Tech' },
+                { id: 'Microsoft', group: 'subnode', size: 10, color: colors.rose, parent: 'Big Tech' },
+                { id: 'Amazon', group: 'subnode', size: 9, color: colors.rose, parent: 'Big Tech' },
+            ],
+            links: [
+                { source: 'You', target: 'Founders', value: 584 },
+                { source: 'You', target: 'Academia', value: 340 },
+                { source: 'You', target: 'AI/ML', value: 330 },
+                { source: 'You', target: 'EdTech', value: 185 },
+                { source: 'You', target: 'VC/Investors', value: 97 },
+                { source: 'You', target: 'HR/Talent', value: 65 },
+                { source: 'You', target: 'Big Tech', value: 53 },
+                { source: 'You', target: 'Consulting', value: 45 },
+                // Founder sub-links
+                { source: 'Founders', target: 'YC Alumni', value: 45 },
+                { source: 'Founders', target: 'Techstars', value: 38 },
+                { source: 'Founders', target: 'On Deck', value: 32 },
+                { source: 'Founders', target: 'Indie Hackers', value: 28 },
+                // Academia sub-links
+                { source: 'Academia', target: 'Stanford', value: 42 },
+                { source: 'Academia', target: 'MIT', value: 35 },
+                { source: 'Academia', target: 'Harvard', value: 30 },
+                { source: 'Academia', target: 'Berkeley', value: 25 },
+                // AI/ML sub-links
+                { source: 'AI/ML', target: 'Anthropic', value: 38 },
+                { source: 'AI/ML', target: 'OpenAI', value: 35 },
+                { source: 'AI/ML', target: 'Hugging Face', value: 22 },
+                { source: 'AI/ML', target: 'Cohere', value: 18 },
+                // EdTech sub-links
+                { source: 'EdTech', target: 'Khan Academy', value: 28 },
+                { source: 'EdTech', target: 'Coursera', value: 22 },
+                { source: 'EdTech', target: 'Duolingo', value: 18 },
+                // VC sub-links
+                { source: 'VC/Investors', target: 'a16z', value: 25 },
+                { source: 'VC/Investors', target: 'Sequoia', value: 20 },
+                { source: 'VC/Investors', target: 'GSV', value: 15 },
+                // Big Tech sub-links
+                { source: 'Big Tech', target: 'Google', value: 28 },
+                { source: 'Big Tech', target: 'Meta', value: 22 },
+                { source: 'Big Tech', target: 'Microsoft', value: 20 },
+                { source: 'Big Tech', target: 'Amazon', value: 18 },
+                // Cross-links between clusters
+                { source: 'AI/ML', target: 'Founders', value: 40, dashed: true },
+                { source: 'EdTech', target: 'HR/Talent', value: 25, dashed: true },
+                { source: 'VC/Investors', target: 'Founders', value: 30, dashed: true },
+                { source: 'Academia', target: 'AI/ML', value: 35, dashed: true },
+                { source: 'Big Tech', target: 'AI/ML', value: 28, dashed: true },
+            ]
+        };
+
+        const container = document.getElementById('networkGraph');
+        const width = container.clientWidth;
+        const height = 600;
+
+        const svg = d3.select('#networkGraph')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        // Add zoom behavior
+        const g = svg.append('g');
+        svg.call(d3.zoom()
+            .scaleExtent([0.3, 3])
+            .on('zoom', (event) => g.attr('transform', event.transform)));
+
+        const simulation = d3.forceSimulation(networkData.nodes)
+            .force('link', d3.forceLink(networkData.links).id(d => d.id).distance(d => d.dashed ? 150 : 100))
+            .force('charge', d3.forceManyBody().strength(-400))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(d => d.size + 10));
+
+        // Draw links
+        const link = g.append('g')
+            .selectAll('line')
+            .data(networkData.links)
+            .join('line')
+            .attr('stroke', d => d.dashed ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.2)')
+            .attr('stroke-width', d => Math.sqrt(d.value) / 3)
+            .attr('stroke-dasharray', d => d.dashed ? '5,5' : 'none');
+
+        // Draw nodes
+        const node = g.append('g')
+            .selectAll('circle')
+            .data(networkData.nodes)
+            .join('circle')
+            .attr('r', d => d.size)
+            .attr('fill', d => d.color)
+            .attr('stroke', '#fff')
+            .attr('stroke-width', d => d.group === 'center' ? 3 : 2)
+            .attr('opacity', d => d.group === 'center' || d.group === 'cluster' ? 1 : 0.85)
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+
+        // Add labels
+        const label = g.append('g')
+            .selectAll('text')
+            .data(networkData.nodes)
+            .join('text')
+            .text(d => d.id)
+            .attr('font-size', d => d.group === 'center' ? 14 : d.group === 'cluster' ? 12 : 9)
+            .attr('fill', d => d.group === 'subnode' ? '#666' : '#333')
+            .attr('text-anchor', 'middle')
+            .attr('dy', d => d.size + 15)
+            .attr('font-weight', d => d.group === 'center' ? 'bold' : d.group === 'cluster' ? '500' : 'normal');
+
+        // Tooltip
+        node.append('title')
+            .text(d => d.count ? `${d.id}: ${d.count} connections` : d.id);
+
+        simulation.on('tick', () => {
+            link
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+            node
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y);
+            label
+                .attr('x', d => d.x)
+                .attr('y', d => d.y);
+        });
+
+        function dragstarted(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        }
+
+        function dragged(event) {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+
+        function dragended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+    </script>
+</body>
+</html>
