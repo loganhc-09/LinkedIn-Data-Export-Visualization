@@ -556,6 +556,17 @@
             }
         }
 
+        /* Hide elements on mobile */
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none !important;
+            }
+
+            .timeline-month-labels {
+                padding: 0 60px 0 60px !important;
+            }
+        }
+
         /* On wide screens, shift content right to make room for side nav */
         @media (min-width: 1501px) {
             .container {
@@ -623,13 +634,18 @@
                 height: 400px !important;
             }
 
-            /* Strata layers more compact */
+            /* Strata layers - stack text and count vertically on mobile */
             .strata-layer {
                 padding: 16px !important;
+                padding-right: 16px !important;
             }
 
             .strata-layer .count {
-                font-size: 1.4rem !important;
+                position: static !important;
+                transform: none !important;
+                font-size: 1.2rem !important;
+                margin-top: 8px;
+                display: block;
             }
 
             /* Flow bars smaller */
@@ -660,6 +676,18 @@
             /* Timeline rows smaller */
             .connection-timeline-row {
                 gap: 8px !important;
+            }
+
+            /* Connection timeline - hide month header on mobile, show only first and last */
+            .timeline-month-header {
+                display: none !important;
+            }
+
+            /* Timeline legend - wrap and show fully */
+            .timeline-legend {
+                flex-wrap: wrap !important;
+                gap: 8px 16px !important;
+                font-size: 0.75rem !important;
             }
 
             /* Color palette wraps better */
@@ -798,7 +826,7 @@
                 <ol class="toc-list">
                     <li><a href="#network-universe">Your Network as a Universe</a></li>
                     <li><a href="#linkedin-inferences">LinkedIn's Inferences vs Reality</a></li>
-                    <li><a href="#high-value-messages">High-Value Messages to Reply To</a></li>
+                    <li><a href="#high-value-messages">Lost Opportunity DM Search</a></li>
                     <li><a href="#posting-correlation">Does Posting Actually Work?</a></li>
                     <li><a href="#company-clusters">Who You Actually Follow</a></li>
                     <li><a href="#inbound-outbound">Inbound vs Outbound Connections</a></li>
@@ -806,6 +834,7 @@
                     <li><a href="#connection-timeline">Connection Timeline</a></li>
                     <li><a href="#inbox-quality">Inbox Quality Analysis</a></li>
                     <li><a href="#career-strata">Your Career in Layers</a></li>
+                    <li><a href="#hybrid-careerspan">What If You Had Better Data?</a></li>
                 </ol>
                 <h3 style="margin-top: 20px;">Resources</h3>
                 <ul class="toc-list" style="list-style: none;">
@@ -875,46 +904,138 @@
             </div>
         </div>
 
-        <!-- 3. High-Value Messages to Reply To -->
+        <!-- 3. Lost Opportunity DM Search -->
         <div class="viz-section" id="high-value-messages">
-            <h2>3. High-Value Messages to Reply To</h2>
-            <p class="description">Find warm leads, collaboration offers, and genuine outreach buried in your inbox.</p>
+            <h2>3. Lost Opportunity DM Search</h2>
+            <p class="description">High-potential messages buried in your inbox that deserve a reply. These are real opportunities you might be missing.</p>
 
-            <div class="message-card">
-                <div class="message-header">
-                    <span class="message-type">Collaboration Offer</span>
-                    <span class="message-age">6 days ago</span>
+            <!-- Summary stats row -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px;">
+                <div style="background: rgba(176,128,128,0.1); border: 1px solid var(--negative); border-radius: 6px; padding: 20px; text-align: center;">
+                    <div style="font-size: 2.4rem; font-weight: 300; color: var(--negative);">23</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">unanswered high-value DMs</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">from the last 6 months</div>
                 </div>
-                <div class="message-preview">"Hope you are good. Happy New Year! As you know, I work with [Company]..."</div>
+                <div style="background: rgba(201,169,98,0.1); border: 1px solid var(--data-1); border-radius: 6px; padding: 20px; text-align: center;">
+                    <div style="font-size: 2.4rem; font-weight: 300; color: var(--data-1);">7</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">someone followed up</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">they messaged you twice — still no reply</div>
+                </div>
+                <div style="background: rgba(122,158,159,0.1); border: 1px solid var(--data-2); border-radius: 6px; padding: 20px; text-align: center;">
+                    <div style="font-size: 2.4rem; font-weight: 300; color: var(--data-2);">4</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">still salvageable</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">sent within the last 2 weeks</div>
+                </div>
             </div>
 
-            <div class="message-card">
-                <div class="message-header">
-                    <span class="message-type">Follow-up</span>
-                    <span class="message-age">8 days ago</span>
+            <!-- Visual inbox: priority-sorted message rows -->
+            <div style="border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden;">
+                <!-- Header -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 10px 16px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-subtle); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
+                    <div></div>
+                    <div>Message</div>
+                    <div>Type</div>
+                    <div style="text-align: right;">Waiting</div>
                 </div>
-                <div class="message-preview">"Just sending this in case I got lost in your inbox..."</div>
+
+                <!-- Row 1: urgent -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; background: rgba(176,128,128,0.04);">
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--negative); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-size: 0.7rem; font-weight: 600;">!!</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Collaboration offer from a founder in your space</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">They followed up once already. Mutual connections: 12</div>
+                    </div>
+                    <div><span style="background: rgba(155,138,165,0.15); color: var(--data-3); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">Collaboration</span></div>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--negative); font-weight: 500;">18 days</div>
+                </div>
+
+                <!-- Row 2: urgent -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; background: rgba(176,128,128,0.04);">
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--negative); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-size: 0.7rem; font-weight: 600;">!!</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Podcast interview invitation</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Host has 25K followers. Sent a follow-up 5 days later.</div>
+                    </div>
+                    <div><span style="background: rgba(201,169,98,0.15); color: var(--data-1); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">Opportunity</span></div>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--negative); font-weight: 500;">12 days</div>
+                </div>
+
+                <!-- Row 3: warm -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center;">
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--data-1); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-size: 0.7rem; font-weight: 600;">!</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Warm intro from a mutual connection</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Introduced by someone you message frequently. In your industry.</div>
+                    </div>
+                    <div><span style="background: rgba(122,158,159,0.15); color: var(--data-2); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">Warm Intro</span></div>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--data-1);">9 days</div>
+                </div>
+
+                <!-- Row 4: warm -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center;">
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--data-1); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-size: 0.7rem; font-weight: 600;">!</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Meeting request — specific dates offered</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">They proposed 3 time slots. VP-level at an edtech company.</div>
+                    </div>
+                    <div><span style="background: rgba(143,163,135,0.15); color: var(--data-5); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">Meeting</span></div>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--data-1);">6 days</div>
+                </div>
+
+                <!-- Row 5: moderate -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center;">
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--bg-tertiary); border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 600;">·</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary);">Someone sharing your post with their take</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Reshared your content and DM'd you about it. 8K followers.</div>
+                    </div>
+                    <div><span style="background: rgba(165,137,122,0.15); color: var(--data-4); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">Engagement</span></div>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--text-muted);">3 weeks</div>
+                </div>
+
+                <!-- Row 6: moderate -->
+                <div style="display: grid; grid-template-columns: 40px 1fr 120px 100px; gap: 12px; padding: 14px 16px; align-items: center;">
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--bg-tertiary); border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 600;">·</span>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary);">Advisor intro — someone vouched for you</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">A 2nd-degree connection said "you should talk to [you]." No reply yet.</div>
+                    </div>
+                    <div><span style="background: rgba(122,158,159,0.15); color: var(--data-2); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">Warm Intro</span></div>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--text-muted);">4 weeks</div>
+                </div>
             </div>
 
-            <div class="message-card">
-                <div class="message-header">
-                    <span class="message-type">Meeting Request</span>
-                    <span class="message-age">10 days ago</span>
+            <!-- Legend -->
+            <div style="display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--negative); flex-shrink: 0;"></div>
+                    <span>They followed up — reply ASAP</span>
                 </div>
-                <div class="message-preview">"I'm pretty free on Tues, Thurs or Fri..."</div>
-            </div>
-
-            <div class="message-card" style="border-left-color: var(--data-1);">
-                <div class="message-header">
-                    <span class="message-type" style="color: var(--data-1);">Warm Intro</span>
-                    <span class="message-age">9 days ago</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--data-1); flex-shrink: 0;"></div>
+                    <span>High-value — don't let this go cold</span>
                 </div>
-                <div class="message-preview">"Nice to meet you! Thanks for the intro..."</div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--bg-tertiary); border: 1px solid var(--border-medium); flex-shrink: 0;"></div>
+                    <span>Worth a reply when you have time</span>
+                </div>
             </div>
 
             <div class="prompt-box">
                 <div class="prompt-label">Prompt to try</div>
-                <div class="prompt-text">"Go through my messages.csv and identify 10 high-value messages I should reply to. Prioritize warm leads, collaboration offers, podcast invitations, and genuine professional outreach. Include messages from the last few months but no time limit for truly high-value ones."</div>
+                <div class="prompt-text">"Go through my messages.csv and find unanswered messages that look like real opportunities — collaboration offers, meeting requests, warm intros, podcast invitations. Prioritize ones where someone followed up or where a mutual connection made the intro. Show me who's waiting and how long they've been waiting."</div>
                 <div class="csv-note">Uses: messages.csv</div>
             </div>
         </div>
@@ -1130,14 +1251,14 @@
             <p class="description">LinkedIn shows "Connected." The data export shows <em>when</em>, <em>who reached out</em>, and <em>whether you ever spoke again</em>.</p>
 
             <!-- Horizontal timeline header -->
-            <div style="margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); padding: 0 60px;">
+            <div class="timeline-header-wrapper" style="margin-bottom: 20px;">
+                <div class="timeline-month-labels" style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); padding: 0 60px;">
                     <span>Jul 2025</span>
-                    <span>Aug</span>
-                    <span>Sep</span>
-                    <span>Oct</span>
-                    <span>Nov</span>
-                    <span>Dec</span>
+                    <span class="hide-mobile">Aug</span>
+                    <span class="hide-mobile">Sep</span>
+                    <span class="hide-mobile">Oct</span>
+                    <span class="hide-mobile">Nov</span>
+                    <span class="hide-mobile">Dec</span>
                     <span>Jan 2026</span>
                 </div>
             </div>
@@ -1222,21 +1343,21 @@
             </div>
 
             <!-- Legend -->
-            <div style="margin-top: 24px; display: flex; gap: 24px; font-size: 0.8rem; color: var(--text-muted);">
+            <div class="timeline-legend" style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: 16px 24px; font-size: 0.8rem; color: var(--text-muted);">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 24px; height: 12px; background: var(--data-2); border-radius: 2px;"></div>
+                    <div style="width: 24px; height: 12px; background: var(--data-2); border-radius: 2px; flex-shrink: 0;"></div>
                     <span>They found me</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 24px; height: 12px; background: var(--data-1); border-radius: 2px;"></div>
+                    <div style="width: 24px; height: 12px; background: var(--data-1); border-radius: 2px; flex-shrink: 0;"></div>
                     <span>I reached out</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 24px; height: 12px; background: #d5d5d5; border-radius: 2px;"></div>
+                    <div style="width: 24px; height: 12px; background: #d5d5d5; border-radius: 2px; flex-shrink: 0;"></div>
                     <span>Never messaged</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%;"></div>
+                    <div style="width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%; flex-shrink: 0;"></div>
                     <span>= message exchanged</span>
                 </div>
             </div>
@@ -1321,6 +1442,235 @@
                 <div class="prompt-label">Prompt to try</div>
                 <div class="prompt-text">"Analyze my Connections.csv by connection date. Group connections by year and show me how my network grew during different periods of my career. Visualize this as layers showing network expansion over time."</div>
                 <div class="csv-note">Uses: Connections.csv</div>
+            </div>
+        </div>
+
+        <!-- 11. Hybrid: Careerspan + LinkedIn -->
+        <div class="viz-section" id="hybrid-careerspan" style="border: 2px solid var(--accent-primary);">
+            <h2>11. What If You Had Better Data?</h2>
+            <p class="description">Everything above came from a LinkedIn data export — the breadth of your professional life. But breadth without depth is just a contact list. Here's what changes when you add real experience data.</p>
+
+            <div style="background: linear-gradient(135deg, rgba(201,169,98,0.1) 0%, rgba(201,169,98,0.03) 100%); border: 1px solid rgba(201,169,98,0.3); border-radius: 6px; padding: 20px 24px; margin-bottom: 30px;">
+                <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">What is careerspan?</div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                    <a href="https://www.mycareerspan.com" style="color: var(--accent-primary); font-weight: 500;">careerspan</a> is a free tool that helps you capture the depth of your professional experience — the stuff LinkedIn doesn't know about you. Create an account, walk through structured prompts about your actual work, and get data you can combine with your LinkedIn export for a much richer picture.
+                </p>
+            </div>
+
+            <!-- The Problem -->
+            <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 28px; margin-bottom: 30px;">
+                <div style="font-weight: 500; margin-bottom: 12px; color: var(--text-primary);">The problem with LinkedIn data</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px;">What LinkedIn knows about you</div>
+                        <ul style="list-style: none; font-size: 0.9rem; color: var(--text-secondary);">
+                            <li style="padding: 4px 0;">✓ Who you're connected to</li>
+                            <li style="padding: 4px 0;">✓ When you connected</li>
+                            <li style="padding: 4px 0;">✓ What you post about</li>
+                            <li style="padding: 4px 0;">✓ Who messages you</li>
+                            <li style="padding: 4px 0; color: var(--text-muted);">✗ What you've actually done</li>
+                            <li style="padding: 4px 0; color: var(--text-muted);">✗ How you think about problems</li>
+                            <li style="padding: 4px 0; color: var(--text-muted);">✗ What you're capable of next</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px;">What a behavioral interview captures</div>
+                        <ul style="list-style: none; font-size: 0.9rem; color: var(--text-secondary);">
+                            <li style="padding: 4px 0; color: var(--text-muted);">✗ Your network graph</li>
+                            <li style="padding: 4px 0; color: var(--text-muted);">✗ Your engagement patterns</li>
+                            <li style="padding: 4px 0; color: var(--text-muted);">✗ Your industry connections</li>
+                            <li style="padding: 4px 0;">✓ Specific accomplishments with metrics</li>
+                            <li style="padding: 4px 0;">✓ How you approach ambiguity</li>
+                            <li style="padding: 4px 0;">✓ Skills proven in context (not endorsed)</li>
+                            <li style="padding: 4px 0;">✓ Gaps relative to target roles</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--accent-primary); font-weight: 500;">Neither data source alone tells you what to do next. Together, they do.</div>
+            </div>
+
+            <!-- Live Example: Resume Bullet vs 3D Experience -->
+            <div style="margin-bottom: 30px;">
+                <div style="font-weight: 500; margin-bottom: 16px; color: var(--text-primary);">Same experience. Two very different levels of data.</div>
+
+                <!-- The flat version -->
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px 24px; margin-bottom: 12px; border-left: 3px solid var(--negative);">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--negative); margin-bottom: 8px; font-weight: 600;">What a resume bullet captures</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">"Spearheaded a user program reaching 1,200 community members, onboarding 35 participants to validate product-market fit and enhance product alignment with career counselor workflows"</div>
+                </div>
+
+                <!-- The 3D version -->
+                <div style="background: var(--bg-tertiary); border-radius: 6px; padding: 20px 24px; border-left: 3px solid var(--positive);">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--positive); margin-bottom: 8px; font-weight: 600;">What a structured behavioral interview captures</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: var(--data-1); margin-bottom: 4px;">SITUATION</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Transitioning to B2B2C model. Career counselors needed to integrate external product into existing workflows — historically a hard sell. Three pilots launching within weeks, no playbook existed.</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: var(--data-2); margin-bottom: 4px;">TASK</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Field-test the product in counselor capacity before pilots launched. Prove functionality, effectiveness, and ease of use. Design the customer success process from scratch.</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: var(--data-3); margin-bottom: 4px;">ACTION</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Personally messaged 1,200 people across Slack/WhatsApp. Fought co-founder to expand from 10 to 35 participants. Ran 30-min onboarding calls with each. Weekly check-ins for 2 months. Built user personas from patterns across passive seekers, active searchers, and graduating students.</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: var(--data-4); margin-bottom: 4px;">RESULT</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Referenced in 20+ sales meetings. Directly influenced 3 signed pilots (200-student nonprofit, 300-student university, 1,000-student community org). Co-founder: "You were totally right." Completed Dec–Feb, outsized impact on business trajectory.</div>
+                        </div>
+                    </div>
+
+                    <!-- Extracted skills -->
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px;">Skills proven in context (not just endorsed)</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <span style="background: rgba(201,169,98,0.15); color: var(--data-1); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">User Research</span>
+                            <span style="background: rgba(122,158,159,0.15); color: var(--data-2); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">Product Strategy</span>
+                            <span style="background: rgba(155,138,165,0.15); color: var(--data-3); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">Community Engagement</span>
+                            <span style="background: rgba(165,137,122,0.15); color: var(--data-4); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">Zero-Budget Execution</span>
+                            <span style="background: rgba(143,163,135,0.15); color: var(--data-5); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">Stakeholder Persuasion</span>
+                            <span style="background: rgba(176,139,139,0.15); color: var(--data-6); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">Customer Success Design</span>
+                            <span style="background: rgba(125,138,153,0.15); color: var(--data-7); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">Sales Enablement</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Gap Analysis + Network Overlay -->
+            <div style="margin-bottom: 30px;">
+                <div style="font-weight: 500; margin-bottom: 6px; color: var(--text-primary);">Now combine both: Gap Analysis × Your Network</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">Target role: <strong>VP of Product, EdTech (Series A-B)</strong>. careerspan identifies gaps from your experience data. LinkedIn shows who in your network could help close them.</div>
+
+                <div style="display: flex; flex-direction: column; gap: 0;">
+                    <!-- Gap 1: Strong -->
+                    <div style="display: grid; grid-template-columns: 200px 1fr 200px; gap: 0; border: 1px solid var(--border-subtle); border-bottom: none; padding: 16px 20px; background: var(--bg-tertiary); align-items: center;">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">User Research</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Required: Advanced</div>
+                        </div>
+                        <div style="padding: 0 20px;">
+                            <div style="height: 8px; background: var(--border-subtle); border-radius: 4px; overflow: hidden; position: relative;">
+                                <div style="width: 92%; height: 100%; background: var(--positive); border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span style="font-size: 0.7rem; color: var(--positive); font-weight: 500;">92% — Strong match</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">35-person pilot, 3 user personas built</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+                            <span style="color: var(--data-2);">12 connections</span> in UX research
+                        </div>
+                    </div>
+
+                    <!-- Gap 2: Strong -->
+                    <div style="display: grid; grid-template-columns: 200px 1fr 200px; gap: 0; border: 1px solid var(--border-subtle); border-bottom: none; padding: 16px 20px; background: var(--bg-tertiary); align-items: center;">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">Product Strategy</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Required: Advanced</div>
+                        </div>
+                        <div style="padding: 0 20px;">
+                            <div style="height: 8px; background: var(--border-subtle); border-radius: 4px; overflow: hidden;">
+                                <div style="width: 85%; height: 100%; background: var(--positive); border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span style="font-size: 0.7rem; color: var(--positive); font-weight: 500;">85% — Strong match</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Drove B2B2C pivot, admin dashboard specs</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+                            <span style="color: var(--data-2);">8 connections</span> in product
+                        </div>
+                    </div>
+
+                    <!-- Gap 3: Moderate -->
+                    <div style="display: grid; grid-template-columns: 200px 1fr 200px; gap: 0; border: 1px solid var(--border-subtle); border-bottom: none; padding: 16px 20px; background: var(--bg-tertiary); align-items: center;">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">Revenue Ownership</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Required: P&L experience</div>
+                        </div>
+                        <div style="padding: 0 20px;">
+                            <div style="height: 8px; background: var(--border-subtle); border-radius: 4px; overflow: hidden;">
+                                <div style="width: 55%; height: 100%; background: var(--data-1); border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span style="font-size: 0.7rem; color: var(--data-1); font-weight: 500;">55% — Gap: no P&L ownership cited</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Positioned as influence, not ownership</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+                            <span style="color: var(--data-1);">3 connections</span> in finance
+                        </div>
+                    </div>
+
+                    <!-- Gap 4: Weak -->
+                    <div style="display: grid; grid-template-columns: 200px 1fr 200px; gap: 0; border: 1px solid var(--border-subtle); border-bottom: none; padding: 16px 20px; background: var(--bg-tertiary); align-items: center;">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">Engineering Management</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Required: Team leadership</div>
+                        </div>
+                        <div style="padding: 0 20px;">
+                            <div style="height: 8px; background: var(--border-subtle); border-radius: 4px; overflow: hidden;">
+                                <div style="width: 30%; height: 100%; background: var(--negative); border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span style="font-size: 0.7rem; color: var(--negative); font-weight: 500;">30% — Gap: no direct eng reports</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Managed product, not engineers</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+                            <span style="color: var(--negative);">0 connections</span> in eng mgmt
+                        </div>
+                    </div>
+
+                    <!-- Gap 5: Moderate -->
+                    <div style="display: grid; grid-template-columns: 200px 1fr 200px; gap: 0; border: 1px solid var(--border-subtle); padding: 16px 20px; background: var(--bg-tertiary); align-items: center; border-radius: 0 0 6px 6px;">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">Scale (500K+ users)</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Required: Growth stage exp</div>
+                        </div>
+                        <div style="padding: 0 20px;">
+                            <div style="height: 8px; background: var(--border-subtle); border-radius: 4px; overflow: hidden;">
+                                <div style="width: 40%; height: 100%; background: var(--data-1); border-radius: 4px;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span style="font-size: 0.7rem; color: var(--data-1); font-weight: 500;">40% — Gap: early-stage experience only</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Pilots of 200-1,000, not 500K</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+                            <span style="color: var(--data-2);">5 connections</span> at scale-ups
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The So What -->
+            <div style="background: linear-gradient(135deg, rgba(201,169,98,0.08) 0%, rgba(122,158,159,0.08) 100%); border-radius: 6px; padding: 24px 28px; border: 1px solid rgba(201,169,98,0.2);">
+                <div style="font-weight: 500; margin-bottom: 12px; color: var(--text-primary);">What I see when I look at this</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                    My LinkedIn data tells me I have 2,400+ connections and I'm most engaged in EdTech and AI. Cool. But it can't tell me <em>which experiences actually qualify me</em> for what I want to do next — or where the real gaps are. The resume bullet version of my experience flattens everything into a line item. The behavioral interview version captures the actual story: I fought my co-founder on scope, ran 35 onboarding calls with zero budget, and directly influenced $100K+ in pilot contracts. That's the difference between a contact list and a career strategy.
+                </div>
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(201,169,98,0.2); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center;">
+                    <div>
+                        <div style="font-size: 1.4rem; font-weight: 300; color: var(--data-1);">2,400+</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">LinkedIn connections</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.4rem; font-weight: 300; color: var(--data-2);">7</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">skills proven with evidence</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.4rem; font-weight: 300; color: var(--data-3);">2</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">real gaps identified</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prompt-box" style="margin-top: 24px;">
+                <div class="prompt-label">Try this yourself</div>
+                <div class="prompt-text">"I'm going to paste a job description and my experience from careerspan. Show me where I'm strong, where the gaps are, and which of my LinkedIn connections could help me close those gaps."</div>
+                <div class="csv-note">Uses: careerspan export + LinkedIn Connections.csv</div>
             </div>
         </div>
 
