@@ -1,5 +1,7 @@
 # Visualize Your LinkedIn Data Export
 
+*Originally published January 2026 by [Logan Currie](https://logancurrie.com)*
+
 An interactive HTML page that shows what you can do with your LinkedIn data export + AI.
 
 **[View the live page →](YOUR_GITHUB_PAGES_URL)**
