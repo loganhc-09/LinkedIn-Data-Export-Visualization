@@ -4,7 +4,7 @@
 
 An interactive HTML page that shows what you can do with your LinkedIn data export + AI.
 
-**[View the live page →](YOUR_GITHUB_PAGES_URL)**
+**[View the live page →](https://loganhc-09.github.io/LinkedIn-Data-Export-Visualization/)**
 
 ## What This Is
 
@@ -20,4 +20,4 @@ I downloaded my LinkedIn data (all 50 CSV files) and used Claude Code to analyze
 
 Made by [Logan Currie](https://www.linkedin.com/in/logan-currie/) with Claude Code.
 
-Part of my [Captain's Log series on Substack](https://loganinthefuture.substack.com/) where I experiment with AI tools and share what I learn.
+Part of my [Career Security Field Notes on Substack](https://loganinthefuture.substack.com/) where I experiment with AI tools and share what I learn.
