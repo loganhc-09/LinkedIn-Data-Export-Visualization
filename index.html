@@ -357,6 +357,8 @@
 
         .flow-bars {
             flex: 1;
+            min-width: 0;
+            max-width: 343px; /* bar widths are % of the widest row (340px + gap): same size on desktop, one shared scale on phones */
             display: flex;
             gap: 3px;
             align-items: center;
@@ -716,6 +718,18 @@
 
             [style*="font-size: 1.8rem"] {
                 font-size: 1.5rem !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            /* Skill-match rows (200px | bar | 200px) stack on phones */
+            .viz-section [style*="grid-template-columns: 200px 1fr 200px"] {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            .viz-section [style*="grid-template-columns: 200px 1fr 200px"] > div {
+                padding: 0 !important;
+                text-align: left !important;
             }
         }
 
@@ -1146,43 +1160,43 @@
                 <div class="flow-month">
                     <div class="month-label">Jul 2025</div>
                     <div class="flow-bars">
-                        <div class="flow-bar incoming" style="width: 134px;">67</div>
-                        <div class="flow-bar outgoing" style="width: 50px;">25</div>
+                        <div class="flow-bar incoming" style="width: 39.07%;">67</div>
+                        <div class="flow-bar outgoing" style="width: 14.58%;">25</div>
                     </div>
                 </div>
                 <div class="flow-month">
                     <div class="month-label">Aug 2025</div>
                     <div class="flow-bars">
-                        <div class="flow-bar incoming" style="width: 180px;">90</div>
-                        <div class="flow-bar outgoing" style="width: 54px;">27</div>
+                        <div class="flow-bar incoming" style="width: 52.48%;">90</div>
+                        <div class="flow-bar outgoing" style="width: 15.74%;">27</div>
                     </div>
                 </div>
                 <div class="flow-month">
                     <div class="month-label">Sep 2025</div>
                     <div class="flow-bars">
-                        <div class="flow-bar incoming" style="width: 258px;">129</div>
-                        <div class="flow-bar outgoing" style="width: 82px;">41</div>
+                        <div class="flow-bar incoming" style="width: 75.22%;">129</div>
+                        <div class="flow-bar outgoing" style="width: 23.91%;">41</div>
                     </div>
                 </div>
                 <div class="flow-month">
                     <div class="month-label">Oct 2025</div>
                     <div class="flow-bars">
-                        <div class="flow-bar incoming" style="width: 184px;">92</div>
-                        <div class="flow-bar outgoing" style="width: 88px;">44</div>
+                        <div class="flow-bar incoming" style="width: 53.64%;">92</div>
+                        <div class="flow-bar outgoing" style="width: 25.66%;">44</div>
                     </div>
                 </div>
                 <div class="flow-month">
                     <div class="month-label">Nov 2025</div>
                     <div class="flow-bars">
-                        <div class="flow-bar incoming" style="width: 102px;">51</div>
-                        <div class="flow-bar outgoing" style="width: 14px;">7</div>
+                        <div class="flow-bar incoming" style="width: 29.74%;">51</div>
+                        <div class="flow-bar outgoing" style="width: 4.08%;">7</div>
                     </div>
                 </div>
                 <div class="flow-month">
                     <div class="month-label">Dec 2025</div>
                     <div class="flow-bars">
-                        <div class="flow-bar incoming" style="width: 186px;">93</div>
-                        <div class="flow-bar outgoing" style="width: 16px;">8</div>
+                        <div class="flow-bar incoming" style="width: 54.23%;">93</div>
+                        <div class="flow-bar outgoing" style="width: 4.66%;">8</div>
                     </div>
                 </div>
             </div>
