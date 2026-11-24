@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="network-viz.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -770,6 +771,10 @@
                 font-size: 0.8rem !important;
             }
         }
+            .nv-canvas { display: block; width: 100%; height: 620px; border-radius: 6px; background: #0d1016; }
+        .nv-replay { font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-secondary); background: none; border: 1px solid var(--border-medium); border-radius: 4px; padding: 6px 14px; cursor: pointer; }
+        .nv-replay:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+        @media (max-width: 700px) { .nv-canvas { height: 520px; } }
     </style>
     <!-- Privacy-friendly analytics by Plausible -->
     <script async src="https://plausible.io/js/pa-a_9NmEYzXH032N_beBnNq.js"></script>
@@ -781,6 +786,9 @@
 <body>
     <!-- Sticky Side Navigation (desktop only) -->
     <nav class="side-nav">
+        <div class="nav-section">New</div>
+        <a href="#network-forming">Watch It Form</a>
+        <a href="#network-shift">Network Shift</a>
         <div class="nav-section">Visualizations</div>
         <a href="#network-universe">1. Network Universe</a>
         <a href="#linkedin-inferences">2. Inferences vs Reality</a>
@@ -800,7 +808,13 @@
     <div class="container">
         <h1>Visualize Your LinkedIn Data Export</h1>
         <p class="subtitle">An experiment by <a href="https://www.linkedin.com/in/logan-currie/" style="color: var(--accent-primary); text-decoration: none;">Logan Currie</a> using <a href="https://claude.ai/download" style="color: var(--accent-secondary); text-decoration: none;">Claude Code</a></p>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; font-family: 'Inter', sans-serif; letter-spacing: 0.02em;">January 20, 2026</p>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; font-family: 'Inter', sans-serif; letter-spacing: 0.02em;">January 20, 2026 · Updated November 24, 2026</p>
+
+        <!-- December 2026 export change -->
+        <div style="background: rgba(176,128,128,0.10); border-left: 3px solid var(--negative); border-radius: 6px; padding: 18px 22px; margin: 18px 0 28px;">
+            <p style="color: var(--text-primary); font-size: 0.95rem; margin: 0 0 8px; font-weight: 500;">Request your export before December 2026.</p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0; line-height: 1.6;">LinkedIn's export page now says: "As of December 2026, your data download no longer includes your connections' email addresses, current companies, or job titles." Several visualizations here need those fields, including the two new ones below. You have to request it on desktop and it takes about 24 hours to arrive.</p>
+        </div>
 
         <!-- Hook -->
         <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 40px; line-height: 1.6;">LinkedIn knows everything about your professional life, but their interface only shows you a fraction of it. The data was always there. I just couldn't see it. So I downloaded all 50 files and made AI read them.</p>
@@ -843,6 +857,11 @@
             </div>
 
             <div class="toc">
+                <h3>New in November 2026</h3>
+                <ul class="toc-list" style="list-style: none; margin-bottom: 20px;">
+                    <li><a href="#network-forming">Watch Your Network Form</a></li>
+                    <li><a href="#network-shift">How Your Network Shifts Over Time</a></li>
+                </ul>
                 <h3>Visualizations</h3>
                 <ol class="toc-list">
                     <li><a href="#network-universe">Your Network as a Universe</a></li>
@@ -862,6 +881,33 @@
                     <li><a href="#style-guide">Style Guide</a></li>
                     <li><a href="#publishing">Publish Your Own</a></li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- New Nov 2026: animated network views -->
+        <div class="viz-section" id="network-forming">
+            <h2>New: Watch Your Network Form</h2>
+            <p class="description">Every dot is one connection. It appears on the day you connected and settles into a group based on that person's current job title. No names, only dots and counts.</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: -20px; margin-bottom: 20px; font-style: italic;">Shown with made-up sample data. Needs job titles and companies, which leave the export in December 2026.</p>
+            <canvas id="vizForming" class="nv-canvas"></canvas>
+            <div style="text-align: right; margin-top: 10px;"><button class="nv-replay" data-target="forming">Replay</button></div>
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Analyze my Connections.csv. Sort every connection into about 8 groups based on their current job title and company, plus an 'everyone else' group. Then build an animated visualization where each connection is a dot that appears on the date we connected and settles into its group's cluster, with a running date and count. Don't show any names."</div>
+                <div class="csv-note">Uses: Connections.csv</div>
+            </div>
+        </div>
+
+        <div class="viz-section" id="network-shift">
+            <h2>New: How Your Network Shifts Over Time</h2>
+            <p class="description">Of the people you connected with in each period, what share falls into each group? The chart calls out the group that grew the most and the one that shrank the most.</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: -20px; margin-bottom: 20px; font-style: italic;">Shown with made-up sample data. Titles are as of the day you export, so this shows where each period's connections work now. Needs job titles, which leave the export in December 2026.</p>
+            <canvas id="vizShift" class="nv-canvas"></canvas>
+            <div style="text-align: right; margin-top: 10px;"><button class="nv-replay" data-target="shift">Replay</button></div>
+            <div class="prompt-box">
+                <div class="prompt-label">Prompt to try</div>
+                <div class="prompt-text">"Analyze my Connections.csv. Group my connections by their current job title into about 8 categories. For each quarter, calculate what share of the people I connected with fell into each category, and chart it as an animated 100% stacked area over time. Tell me which group grew the most and which shrank the most. Titles are as of today, not when we connected, so say that on the chart."</div>
+                <div class="csv-note">Uses: Connections.csv</div>
             </div>
         </div>
 
@@ -2214,6 +2260,19 @@
             event.subject.fy = null;
         }
     </script>
+    <script>
+        // New Nov 2026: animated network views (sample data only)
+        (function () {
+            if (!window.NetworkViz) return;
+            const data = NetworkViz.sample();
+            const views = {
+                forming: NetworkViz.play(document.getElementById('vizForming'), NetworkViz.universe, data, { duration: 9000, build: 0.8, note: 'sample data' }),
+                shift: NetworkViz.play(document.getElementById('vizShift'), NetworkViz.shift, data, { duration: 8000, build: 0.75, monthsPerBin: 6, rising: 0, falling: 1, title: 'Share of new connections, sample data' })
+            };
+            document.querySelectorAll('.nv-replay').forEach((b) => b.addEventListener('click', () => views[b.dataset.target].replay()));
+        })();
+    </script>
+
     <footer style="max-width: 1100px; margin: 60px auto 40px; padding: 24px 20px 0; border-top: 1px solid var(--border-subtle); color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.6; text-align: center;">
         Made by <a href="https://www.logancurrie.com/?ref=linkedin-viz" style="color: var(--accent-primary); text-decoration: none;">Logan Currie</a>. More free tools like this one at <a href="https://www.logancurrie.com/stack?ref=linkedin-viz" style="color: var(--accent-primary); text-decoration: none;">logancurrie.com/stack</a>.
     </footer>
